@@ -1,31 +1,55 @@
 # Build Fix for Fresh Clone
 
-If you encounter this error after cloning:
+If you encounter this error after cloning or pulling:
 ```
 no required module provides package github.com/LZUOSS/gh-proxy/internal/cache
 ```
 
-## Solution
-
-This happens because Go is trying to fetch internal packages from GitHub. Here's how to fix it:
-
-### Option 1: Clean and Rebuild (Recommended)
+## Quick Fix (Recommended)
 
 ```bash
 cd ~/gh-proxy  # or wherever you cloned
 
-# Clean Go cache
+# Run the automated fix script
+./fix-build.sh
+```
+
+## Manual Fix
+
+### Step 1: Ensure you're in the project root
+
+```bash
+cd ~/gh-proxy
+ls go.mod  # Should exist
+```
+
+### Step 2: Clean Go cache
+
+```bash
 go clean -modcache
+go clean -cache
+```
 
-# Remove go.sum if it exists
-rm -f go.sum
+### Step 3: Restore go.sum from git
 
-# Initialize fresh
+```bash
+git checkout go.sum
+```
+
+### Step 4: Rebuild dependencies
+
+```bash
 go mod download
+go mod verify
 go mod tidy
+```
 
-# Build
+### Step 5: Build
+
+```bash
 make build
+# or
+go build -o build/github-proxy ./cmd/server
 ```
 
 ### Option 2: Verify go.mod
