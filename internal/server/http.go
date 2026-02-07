@@ -262,7 +262,12 @@ func (s *HTTPServer) handleHealth(c *gin.Context) {
 // Start starts the HTTP server.
 func (s *HTTPServer) Start() error {
 	// Create HTTP server
-	addr := fmt.Sprintf(":%d", s.config.Server.HTTPPort)
+	host := s.config.Server.Host
+	if host == "" {
+		// Default to all interfaces if not specified
+		host = "0.0.0.0"
+	}
+	addr := fmt.Sprintf("%s:%d", host, s.config.Server.HTTPPort)
 
 	s.server = &http.Server{
 		Addr:           addr,
@@ -275,6 +280,8 @@ func (s *HTTPServer) Start() error {
 
 	s.logger.Info("starting HTTP server",
 		zap.String("addr", addr),
+		zap.String("host", host),
+		zap.Int("port", s.config.Server.HTTPPort),
 		zap.Duration("read_timeout", s.config.Server.ReadTimeout),
 		zap.Duration("write_timeout", s.config.Server.WriteTimeout),
 	)

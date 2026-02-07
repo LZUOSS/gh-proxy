@@ -21,6 +21,7 @@ type Config struct {
 
 // ServerConfig contains HTTP/HTTPS server settings
 type ServerConfig struct {
+	Host             string        `mapstructure:"host"` // Listen address (e.g., "127.0.0.1" for localhost, "0.0.0.0" for all interfaces)
 	HTTPPort         int           `mapstructure:"http_port"`
 	HTTPSPort        int           `mapstructure:"https_port"`
 	EnableHTTPS      bool          `mapstructure:"enable_https"`
@@ -165,6 +166,7 @@ func Load(configPath string) (*Config, error) {
 // setDefaults sets default configuration values
 func setDefaults(v *viper.Viper) {
 	// Server defaults
+	v.SetDefault("server.host", "") // Default to all interfaces (0.0.0.0)
 	v.SetDefault("server.http_port", 8080)
 	v.SetDefault("server.https_port", 8443)
 	v.SetDefault("server.enable_https", false)

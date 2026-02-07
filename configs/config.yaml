@@ -3,6 +3,7 @@
 
 # Server configuration
 server:
+  host: ""  # Listen address - "" or "0.0.0.0" for all interfaces, "127.0.0.1" for localhost only
   http_port: 8080
   https_port: 8443
   enable_https: false

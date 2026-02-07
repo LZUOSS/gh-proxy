@@ -87,6 +87,7 @@ Create a configuration file at `./configs/config.yaml`:
 
 ```yaml
 server:
+  host: ""  # Listen on all interfaces (0.0.0.0) - use "127.0.0.1" for localhost only
   http_port: 8080
   base_path: ""  # Optional: base path like "/ghproxy"
   read_timeout: 30s
@@ -126,6 +127,7 @@ See [configs/config.yaml](configs/config.yaml) for a complete configuration exam
 Configuration values can be overridden using environment variables with the `GITHUB_PROXY_` prefix:
 
 ```bash
+export GITHUB_PROXY_SERVER_HOST=127.0.0.1  # Listen on localhost only
 export GITHUB_PROXY_SERVER_HTTP_PORT=8080
 export GITHUB_PROXY_PROXY_ENABLED=true
 export GITHUB_PROXY_PROXY_ADDRESS=127.0.0.1:1080
@@ -136,6 +138,7 @@ export GITHUB_PROXY_AUTH_ENABLED=true
 
 | Section | Option | Description | Default |
 |---------|--------|-------------|---------|
+| `server.host` | Listen address | Host/IP to bind to (`""` or `0.0.0.0` for all, `127.0.0.1` for localhost) | `""` (all) |
 | `server.http_port` | HTTP port | Port for HTTP server | `8080` |
 | `server.base_path` | Base path | Base path for all routes (e.g., `/ghproxy`) | `""` (root) |
 | `server.read_timeout` | Read timeout | Maximum duration for reading requests | `30s` |

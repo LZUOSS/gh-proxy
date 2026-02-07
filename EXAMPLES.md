@@ -4,11 +4,12 @@ This document provides practical examples of using the GitHub Reverse Proxy with
 
 ## Quick Start
 
-### 1. Default Configuration (Root Path)
+### 1. Default Configuration (Root Path, All Interfaces)
 
 **Configuration:**
 ```yaml
 server:
+  host: ""  # Listen on all interfaces (0.0.0.0)
   http_port: 8080
   base_path: ""
 ```
@@ -29,11 +30,39 @@ curl http://localhost:8080/https://github.com/golang/go/releases/download/go1.21
 curl http://localhost:8080/https://github.com/owner/repo/archive/refs/tags/v1.0.0.tar.gz -o repo.tar.gz
 ```
 
+### 1b. Localhost Only (Development/Security)
+
+For development or when running behind a reverse proxy (recommended for security):
+
+**Configuration:**
+```yaml
+server:
+  host: "127.0.0.1"  # Listen on localhost only
+  http_port: 8080
+  base_path: ""
+```
+
+**Examples:**
+
+```bash
+# Only accessible from localhost
+curl http://localhost:8080/https://github.com/owner/repo/raw/main/README.md
+
+# Not accessible from other machines (more secure)
+```
+
+**Use cases:**
+- Development environment
+- Behind Nginx/Apache reverse proxy
+- Running on same machine as other services
+- Enhanced security (prevent external access)
+
 ### 2. Subpath Deployment
 
 **Configuration:**
 ```yaml
 server:
+  host: ""  # All interfaces
   http_port: 8080
   base_path: /ghproxy
 ```
