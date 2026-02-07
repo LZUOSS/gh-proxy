@@ -1,0 +1,45 @@
+# Build artifacts
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+*.test
+coverage.out
+coverage.html
+
+# Go workspace
+.go-workspace/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Documentation
+README.md
+*.md
+
+# Cache
+cache/
+/var/cache/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

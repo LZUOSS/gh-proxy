@@ -1,0 +1,41 @@
+[Unit]
+Description=GitHub Reverse Proxy Server
+Documentation=https://github.com/kexi/github-reverse-proxy
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=github-proxy
+Group=github-proxy
+WorkingDirectory=/opt/github-proxy
+ExecStart=/opt/github-proxy/github-proxy -config /etc/github-proxy/config.yaml
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=30s
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/cache/github-proxy /var/log/github-proxy
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+MemoryDenyWriteExecute=true
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=github-proxy
+
+[Install]
+WantedBy=multi-user.target
