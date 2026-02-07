@@ -1,0 +1,75 @@
+[Unit]
+Description=GitHub Reverse Proxy (localhost only, behind Nginx)
+Documentation=https://github.com/LZUOSS/gh-proxy
+After=network-online.target nginx.service
+Wants=network-online.target
+PartOf=nginx.service
+
+[Service]
+Type=simple
+User=gh-proxy
+Group=gh-proxy
+WorkingDirectory=/opt/gh-proxy
+
+# Binary location
+ExecStart=/usr/local/bin/gh-proxy
+
+# Restart policy
+Restart=always
+RestartSec=5s
+StartLimitInterval=300
+StartLimitBurst=5
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/cache/gh-proxy /var/log/gh-proxy
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+# Resource limits
+LimitNOFILE=65536
+MemoryLimit=2G
+CPUQuota=300%
+
+# Server configuration - localhost only
+Environment="GITHUB_PROXY_SERVER_HOST=127.0.0.1"
+Environment="GITHUB_PROXY_SERVER_HTTP_PORT=8080"
+Environment="GITHUB_PROXY_SERVER_BASE_PATH=/ghproxy"
+Environment="GITHUB_PROXY_SERVER_READ_TIMEOUT=30s"
+Environment="GITHUB_PROXY_SERVER_WRITE_TIMEOUT=300s"
+
+# Cache configuration
+Environment="GITHUB_PROXY_CACHE_ENABLED=true"
+Environment="GITHUB_PROXY_CACHE_TYPE=hybrid"
+Environment="GITHUB_PROXY_CACHE_MAX_MEMORY_ENTRIES=2000"
+Environment="GITHUB_PROXY_CACHE_DISK_PATH=/var/cache/gh-proxy"
+
+# Rate limiting
+Environment="GITHUB_PROXY_RATELIMIT_ENABLED=true"
+Environment="GITHUB_PROXY_RATELIMIT_REQUESTS_PER_SECOND=100"
+Environment="GITHUB_PROXY_RATELIMIT_BURST=200"
+
+# Metrics
+Environment="GITHUB_PROXY_METRICS_ENABLED=true"
+Environment="GITHUB_PROXY_METRICS_PORT=9090"
+
+# Logging
+Environment="GITHUB_PROXY_LOGGING_LEVEL=info"
+Environment="GITHUB_PROXY_LOGGING_FORMAT=json"
+Environment="GITHUB_PROXY_LOGGING_OUTPUT=file"
+Environment="GITHUB_PROXY_LOGGING_FILE_PATH=/var/log/gh-proxy/app.log"
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gh-proxy
+
+[Install]
+WantedBy=multi-user.target

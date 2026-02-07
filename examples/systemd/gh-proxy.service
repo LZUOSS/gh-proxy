@@ -1,0 +1,52 @@
+[Unit]
+Description=GitHub Reverse Proxy
+Documentation=https://github.com/LZUOSS/gh-proxy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gh-proxy
+Group=gh-proxy
+WorkingDirectory=/opt/gh-proxy
+
+# Binary location
+ExecStart=/usr/local/bin/gh-proxy -config /etc/gh-proxy/config.yaml
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+StartLimitInterval=300
+StartLimitBurst=5
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/cache/gh-proxy /var/log/gh-proxy
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+# Resource limits
+LimitNOFILE=65536
+MemoryLimit=1G
+CPUQuota=200%
+
+# Environment
+Environment="GITHUB_PROXY_CACHE_DISK_PATH=/var/cache/gh-proxy"
+Environment="GITHUB_PROXY_LOGGING_OUTPUT=file"
+Environment="GITHUB_PROXY_LOGGING_FILE_PATH=/var/log/gh-proxy/app.log"
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gh-proxy
+
+[Install]
+WantedBy=multi-user.target
