@@ -57,10 +57,14 @@ func (h *URLHandler) Handle(c *gin.Context) {
 	// Get the full request path
 	fullPath := c.Request.URL.Path
 
-	// Remove base path if present
-	basePath := c.GetString("base_path")
-	if basePath != "" {
-		fullPath = strings.TrimPrefix(fullPath, basePath)
+	// Remove base path if present (and not already stripped by middleware)
+	stripped, strippedExists := c.Get("base_path_stripped")
+	strippedBool, isBool := stripped.(bool)
+	if !strippedExists || !isBool || !strippedBool {
+		basePath := c.GetString("base_path")
+		if basePath != "" {
+			fullPath = strings.TrimPrefix(fullPath, basePath)
+		}
 	}
 
 	// Remove leading slash

@@ -172,9 +172,45 @@ func (s *HTTPServer) fullURLMiddleware() gin.HandlerFunc {
 
 		// Check if this is a full URL with scheme (contains ://)
 		if strings.Contains(path, "://") {
-			// This is a full URL, handle it directly
+			// Get the base path from config and normalize it
+			basePath := s.config.Server.BasePath
+			if basePath != "" {
+				// Ensure base path starts with / but doesn't end with /
+				if !strings.HasPrefix(basePath, "/") {
+					basePath = "/" + basePath
+				}
+				basePath = strings.TrimSuffix(basePath, "/")
+
+				// Strip base path from request path if present
+				if strings.HasPrefix(path, basePath+"/") || path == basePath {
+					// Store original path for logging
+					c.Set("original_path", path)
+
+					// Strip the base path
+					path = strings.TrimPrefix(path, basePath)
+
+					// Temporarily modify request path for handler
+					originalPath := c.Request.URL.Path
+					c.Request.URL.Path = path
+
+					// Set context flags
+					c.Set("base_path", basePath)
+					c.Set("base_path_stripped", true)
+
+					// Handle the request
+					urlHandler.Handle(c)
+
+					// Restore original path for logging/metrics
+					c.Request.URL.Path = originalPath
+
+					c.Abort()
+					return
+				}
+			}
+
+			// No base path configured or path doesn't start with base path
 			urlHandler.Handle(c)
-			c.Abort() // Don't continue to routing
+			c.Abort()
 			return
 		}
 
