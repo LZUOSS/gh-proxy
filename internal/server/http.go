@@ -61,8 +61,18 @@ func NewHTTPServer(cfg *config.Config) (*HTTPServer, error) {
 	}
 
 	// Initialize cache
+	memorySize := cfg.Cache.MaxMemoryEntries
+	if memorySize <= 0 {
+		// If MaxMemoryEntries not set, estimate from MaxMemorySize
+		// Assume average entry size of 1KB
+		memorySize = int(cfg.Cache.MaxMemorySize / 1024)
+	}
+	if memorySize <= 0 {
+		memorySize = 1000 // Default to 1000 entries
+	}
+
 	cacheConfig := cache.Config{
-		MemorySize: int(cfg.Cache.MaxMemorySize / 1024), // Convert bytes to approximate item count
+		MemorySize: memorySize,
 		DiskPath:   cfg.Cache.DiskPath,
 		EnableDisk: cfg.Cache.Enabled && (cfg.Cache.Type == "disk" || cfg.Cache.Type == "hybrid"),
 	}

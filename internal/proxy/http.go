@@ -22,8 +22,8 @@ func createHTTPTransport(cfg *ProxyConfig) (*http.Transport, error) {
 		}).DialContext,
 	}
 
-	// Configure proxy if HTTP proxy is specified
-	if cfg.Type == ProxyTypeHTTP && cfg.Address != "" {
+	// Configure proxy if HTTP or HTTPS proxy is specified
+	if (cfg.Type == ProxyTypeHTTP || cfg.Type == ProxyTypeHTTPS) && cfg.Address != "" {
 		proxyURL, err := parseProxyURL(cfg)
 		if err != nil {
 			return nil, err
@@ -37,12 +37,18 @@ func createHTTPTransport(cfg *ProxyConfig) (*http.Transport, error) {
 // parseProxyURL parses the proxy configuration into a URL
 func parseProxyURL(cfg *ProxyConfig) (*url.URL, error) {
 	if cfg.Address == "" {
-		return nil, fmt.Errorf("HTTP proxy address is required")
+		return nil, fmt.Errorf("HTTP/HTTPS proxy address is required")
+	}
+
+	// Determine scheme based on proxy type
+	scheme := "http"
+	if cfg.Type == ProxyTypeHTTPS {
+		scheme = "https"
 	}
 
 	// Build proxy URL
 	proxyURL := &url.URL{
-		Scheme: "http",
+		Scheme: scheme,
 		Host:   cfg.Address,
 	}
 

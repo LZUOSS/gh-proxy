@@ -18,10 +18,10 @@ server:
 # Proxy configuration for upstream connections to GitHub
 proxy:
   enabled: false
-  type: socks5  # Options: "socks5", "http"
+  type: socks5  # Options: "socks5", "http", "https"
   address: 127.0.0.1:1080
-  # username: ""
-  # password: ""
+  # username: ""         # Optional: proxy authentication username
+  # password: ""         # Optional: proxy authentication password
   timeout: 30s
   dial_timeout: 10s
   keep_alive: 30s
@@ -33,8 +33,9 @@ proxy:
 cache:
   enabled: true
   type: hybrid  # Options: "memory", "disk", "hybrid"
-  max_memory_size: 104857600  # 100MB
-  max_disk_size: 10737418240  # 10GB
+  max_memory_size: 104857600    # 100MB - total memory cache size
+  max_memory_entries: 1000      # Maximum number of entries in memory cache (overrides max_memory_size if set)
+  max_disk_size: 10737418240    # 10GB
   disk_path: /var/cache/github-proxy
   ttl: 1h
   cleanup_interval: 5m

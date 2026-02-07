@@ -32,8 +32,9 @@ proxy:
 cache:
   enabled: true
   type: hybrid  # memory, disk, or hybrid
-  max_memory_size: 104857600  # 100MB
-  max_disk_size: 1073741824   # 1GB
+  max_memory_size: 104857600    # 100MB - total memory cache size
+  max_memory_entries: 1000      # Maximum number of entries in memory cache (takes precedence over max_memory_size)
+  max_disk_size: 1073741824     # 1GB
   disk_path: ./cache
   ttl: 1h
   cleanup_interval: 5m

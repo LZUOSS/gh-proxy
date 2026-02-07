@@ -8,6 +8,7 @@ type ProxyType string
 const (
 	ProxyTypeSOCKS5 ProxyType = "socks5"
 	ProxyTypeHTTP   ProxyType = "http"
+	ProxyTypeHTTPS  ProxyType = "https"
 	ProxyTypeNone   ProxyType = "none"
 )
 

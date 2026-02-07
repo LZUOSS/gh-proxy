@@ -51,11 +51,11 @@ func NewProxyClient(cfg *ProxyConfig) (*ProxyClient, error) {
 
 // validateConfig validates the proxy configuration
 func validateConfig(cfg *ProxyConfig) error {
-	if cfg.Type != ProxyTypeSOCKS5 && cfg.Type != ProxyTypeHTTP && cfg.Type != ProxyTypeNone {
+	if cfg.Type != ProxyTypeSOCKS5 && cfg.Type != ProxyTypeHTTP && cfg.Type != ProxyTypeHTTPS && cfg.Type != ProxyTypeNone {
 		return fmt.Errorf("unsupported proxy type: %s", cfg.Type)
 	}
 
-	if (cfg.Type == ProxyTypeSOCKS5 || cfg.Type == ProxyTypeHTTP) && cfg.Address == "" {
+	if (cfg.Type == ProxyTypeSOCKS5 || cfg.Type == ProxyTypeHTTP || cfg.Type == ProxyTypeHTTPS) && cfg.Address == "" {
 		return fmt.Errorf("proxy address is required for type: %s", cfg.Type)
 	}
 
@@ -89,8 +89,8 @@ func createTransport(cfg *ProxyConfig) (*http.Transport, error) {
 		// Use SOCKS5 proxy
 		baseTransport.DialContext = socks5DialContext(cfg)
 
-	case ProxyTypeHTTP:
-		// Use HTTP proxy
+	case ProxyTypeHTTP, ProxyTypeHTTPS:
+		// Use HTTP or HTTPS proxy
 		proxyURL, err := parseProxyURL(cfg)
 		if err != nil {
 			return nil, err

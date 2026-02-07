@@ -53,7 +53,8 @@ type ProxyConfig struct {
 type CacheConfig struct {
 	Enabled           bool          `mapstructure:"enabled"`
 	Type              string        `mapstructure:"type"` // "memory", "disk", "hybrid"
-	MaxMemorySize     int64         `mapstructure:"max_memory_size"`
+	MaxMemorySize     int64         `mapstructure:"max_memory_size"`     // Maximum memory cache size in bytes
+	MaxMemoryEntries  int           `mapstructure:"max_memory_entries"`  // Maximum number of entries in memory cache
 	MaxDiskSize       int64         `mapstructure:"max_disk_size"`
 	DiskPath          string        `mapstructure:"disk_path"`
 	TTL               time.Duration `mapstructure:"ttl"`
