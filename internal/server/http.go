@@ -199,9 +199,9 @@ func (s *HTTPServer) setupRoutes(router *gin.Engine) {
 	routeGroup.GET("/:owner/:repo/archive/:ref", archiveHandler.Handle)
 
 	// Git protocol routes
-	routeGroup.GET("/:owner/:repo.git/info/refs", gitHandler.HandleInfoRefs)
-	routeGroup.POST("/:owner/:repo.git/git-upload-pack", gitHandler.HandleUploadPack)
-	routeGroup.POST("/:owner/:repo.git/git-receive-pack", gitHandler.HandleReceivePack)
+	routeGroup.GET("/:owner/:repo/info/refs", gitHandler.HandleInfoRefs)
+	routeGroup.POST("/:owner/:repo/git-upload-pack", gitHandler.HandleUploadPack)
+	routeGroup.POST("/:owner/:repo/git-receive-pack", gitHandler.HandleReceivePack)
 
 	// Gist routes
 	routeGroup.GET("/gist/:user/:gist_id/raw/:file", gistHandler.Handle)

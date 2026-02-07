@@ -33,6 +33,9 @@ func (h *GitHandler) HandleInfoRefs(c *gin.Context) {
 	owner := c.Param("owner")
 	repo := c.Param("repo")
 
+	// Strip .git suffix if present (Git clients may send repo.git)
+	repo = strings.TrimSuffix(repo, ".git")
+
 	// Validate parameters
 	if owner == "" || repo == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing required parameters"})
@@ -64,6 +67,9 @@ func (h *GitHandler) HandleUploadPack(c *gin.Context) {
 	owner := c.Param("owner")
 	repo := c.Param("repo")
 
+	// Strip .git suffix if present (Git clients may send repo.git)
+	repo = strings.TrimSuffix(repo, ".git")
+
 	// Validate parameters
 	if owner == "" || repo == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing required parameters"})
@@ -81,6 +87,9 @@ func (h *GitHandler) HandleUploadPack(c *gin.Context) {
 func (h *GitHandler) HandleReceivePack(c *gin.Context) {
 	owner := c.Param("owner")
 	repo := c.Param("repo")
+
+	// Strip .git suffix if present (Git clients may send repo.git)
+	repo = strings.TrimSuffix(repo, ".git")
 
 	// Validate parameters
 	if owner == "" || repo == "" {
