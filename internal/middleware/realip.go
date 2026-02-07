@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/kexi/github-reverse-proxy/internal/util"
+	"github.com/LZUOSS/gh-proxy/internal/util"
 )
 
 // RealIP returns a middleware that extracts the real client IP address

@@ -11,7 +11,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/kexi/github-reverse-proxy/internal/auth"
+	"github.com/LZUOSS/gh-proxy/internal/auth"
 	"golang.org/x/crypto/ssh"
 )
 

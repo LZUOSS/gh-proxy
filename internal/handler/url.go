@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kexi/github-reverse-proxy/internal/cache"
-	"github.com/kexi/github-reverse-proxy/internal/proxy"
+	"github.com/LZUOSS/gh-proxy/internal/cache"
+	"github.com/LZUOSS/gh-proxy/internal/proxy"
 )
 
 // URLHandler handles full GitHub URL requests.

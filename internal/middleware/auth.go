@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kexi/github-reverse-proxy/internal/auth"
-	"github.com/kexi/github-reverse-proxy/internal/config"
+	"github.com/LZUOSS/gh-proxy/internal/auth"
+	"github.com/LZUOSS/gh-proxy/internal/config"
 	"go.uber.org/zap"
 )
 

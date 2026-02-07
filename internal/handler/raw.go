@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kexi/github-reverse-proxy/internal/cache"
-	"github.com/kexi/github-reverse-proxy/internal/proxy"
+	"github.com/LZUOSS/gh-proxy/internal/cache"
+	"github.com/LZUOSS/gh-proxy/internal/proxy"
 )
 
 // RawHandler handles GitHub raw content requests.

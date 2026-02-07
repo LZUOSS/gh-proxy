@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kexi/github-reverse-proxy/internal/ratelimit"
+	"github.com/LZUOSS/gh-proxy/internal/ratelimit"
 )
 
 // RateLimit returns a middleware that enforces rate limiting per IP address.

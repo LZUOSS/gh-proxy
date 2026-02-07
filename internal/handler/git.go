@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kexi/github-reverse-proxy/internal/proxy"
+	"github.com/LZUOSS/gh-proxy/internal/proxy"
 )
 
 // GitHandler handles Git smart HTTP protocol requests.

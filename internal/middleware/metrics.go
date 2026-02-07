@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kexi/github-reverse-proxy/internal/metrics"
+	"github.com/LZUOSS/gh-proxy/internal/metrics"
 )
 
 // Metrics returns a middleware that collects Prometheus metrics.

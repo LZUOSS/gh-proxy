@@ -1,4 +1,4 @@
-module github.com/kexi/github-reverse-proxy
+module github.com/LZUOSS/gh-proxy
 
 go 1.24.0
 

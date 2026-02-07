@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kexi/github-reverse-proxy/internal/config"
-	"github.com/kexi/github-reverse-proxy/internal/server"
-	"github.com/kexi/github-reverse-proxy/internal/ssh"
+	"github.com/LZUOSS/gh-proxy/internal/config"
+	"github.com/LZUOSS/gh-proxy/internal/server"
+	"github.com/LZUOSS/gh-proxy/internal/ssh"
 )
 
 func main() {
