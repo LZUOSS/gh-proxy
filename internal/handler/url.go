@@ -54,10 +54,13 @@ type GitHubURLInfo struct {
 
 // Handle processes full GitHub URL requests.
 func (h *URLHandler) Handle(c *gin.Context) {
-	// Get the path after the base path
-	fullPath := c.Param("url")
-	if fullPath == "" {
-		fullPath = c.Request.URL.Path
+	// Get the full request path
+	fullPath := c.Request.URL.Path
+
+	// Remove base path if present
+	basePath := c.GetString("base_path")
+	if basePath != "" {
+		fullPath = strings.TrimPrefix(fullPath, basePath)
 	}
 
 	// Remove leading slash

@@ -188,20 +188,7 @@ func (s *HTTPServer) setupRoutes(router *gin.Engine) {
 		routeGroup = router.Group("")
 	}
 
-	// Full URL handler - catches GitHub URLs like /https://github.com/owner/repo/...
-	// This should be registered first to catch full URLs before path-based routes
-	routeGroup.GET("/*url", func(c *gin.Context) {
-		path := c.Param("url")
-		// Check if this looks like a GitHub URL
-		if isGitHubURL(path) {
-			urlHandler.Handle(c)
-			return
-		}
-		// If not a GitHub URL, continue to next handler
-		c.Next()
-	})
-
-	// Traditional path-based routes
+	// Traditional path-based routes (register specific routes first)
 	// Release downloads
 	routeGroup.GET("/:owner/:repo/releases/download/:tag/:filename", releasesHandler.Handle)
 
@@ -221,6 +208,15 @@ func (s *HTTPServer) setupRoutes(router *gin.Engine) {
 
 	// API proxy
 	routeGroup.Any("/api/*path", apiHandler.Handle)
+
+	// Full URL handler - specific patterns for GitHub URLs
+	// These catch URLs like /https://github.com/... or /github.com/...
+	routeGroup.GET("/https/*url", urlHandler.Handle)
+	routeGroup.GET("/http/*url", urlHandler.Handle)
+	routeGroup.GET("/github.com/*url", urlHandler.Handle)
+	routeGroup.GET("/raw.githubusercontent.com/*url", urlHandler.Handle)
+	routeGroup.GET("/api.github.com/*url", urlHandler.Handle)
+	routeGroup.GET("/gist.github.com/*url", urlHandler.Handle)
 
 	// Health check endpoint (always at root + base path)
 	if basePath != "" {
