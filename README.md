@@ -6,10 +6,12 @@ A high-performance reverse proxy server for GitHub that provides HTTP and SSH ac
 
 - **HTTP Proxy**: Access GitHub releases, raw files, archives, gists, and API endpoints
 - **SSH Proxy**: Git operations via SSH with authentication support
+- **Full URL Support**: Use complete GitHub URLs instead of path-based routing
+- **Path-Based Listening**: Deploy on subpaths (e.g., `/ghproxy`)
 - **Caching**: Hybrid memory + disk caching with ARC eviction policy
 - **Rate Limiting**: IP-based or token-based rate limiting with configurable limits
 - **Authentication**: Token-based or basic authentication support
-- **Proxy Support**: Route traffic through SOCKS5 or HTTP proxies
+- **Proxy Support**: Route traffic through SOCKS5, HTTP, or HTTPS proxies
 - **Security**: SSRF protection, request validation, and security headers
 - **Metrics**: Prometheus metrics for monitoring
 - **Graceful Shutdown**: Clean shutdown with configurable timeout
@@ -86,13 +88,14 @@ Create a configuration file at `./configs/config.yaml`:
 ```yaml
 server:
   http_port: 8080
+  base_path: ""  # Optional: base path like "/ghproxy"
   read_timeout: 30s
   write_timeout: 300s
   idle_timeout: 120s
 
 proxy:
   enabled: true
-  type: socks5
+  type: socks5  # Options: socks5, http, https
   address: 127.0.0.1:1080
 
 cache:
@@ -134,10 +137,11 @@ export GITHUB_PROXY_AUTH_ENABLED=true
 | Section | Option | Description | Default |
 |---------|--------|-------------|---------|
 | `server.http_port` | HTTP port | Port for HTTP server | `8080` |
+| `server.base_path` | Base path | Base path for all routes (e.g., `/ghproxy`) | `""` (root) |
 | `server.read_timeout` | Read timeout | Maximum duration for reading requests | `30s` |
 | `server.write_timeout` | Write timeout | Maximum duration for writing responses | `300s` |
 | `proxy.enabled` | Enable proxy | Route GitHub requests through proxy | `false` |
-| `proxy.type` | Proxy type | Type of proxy: `socks5` or `http` | `socks5` |
+| `proxy.type` | Proxy type | Type of proxy: `socks5`, `http`, or `https` | `socks5` |
 | `proxy.address` | Proxy address | Proxy server address | `127.0.0.1:1080` |
 | `cache.enabled` | Enable caching | Enable response caching | `true` |
 | `cache.type` | Cache type | Cache strategy: `memory`, `disk`, or `hybrid` | `hybrid` |
@@ -164,7 +168,57 @@ make run
 
 ### HTTP Proxy
 
-The HTTP proxy provides access to various GitHub resources:
+The HTTP proxy provides access to various GitHub resources with two URL formats:
+
+#### URL Formats
+
+**1. Traditional Path-Based URLs**
+
+Use the repository path structure:
+
+```bash
+# Download release asset
+curl http://localhost:8080/owner/repo/releases/download/v1.0.0/binary.tar.gz
+
+# Get raw file
+curl http://localhost:8080/owner/repo/raw/main/README.md
+```
+
+**2. Full GitHub URLs**
+
+Use complete GitHub URLs directly:
+
+```bash
+# Download release asset with full URL
+curl http://localhost:8080/https://github.com/owner/repo/releases/download/v1.0.0/binary.tar.gz
+
+# Get raw file with full URL
+curl http://localhost:8080/https://github.com/ZhiShengYuan/inningbo-go/raw/refs/heads/main/ARCHITECTURE_REFACTORING.md
+
+# Works with all GitHub URL formats
+curl http://localhost:8080/https://raw.githubusercontent.com/owner/repo/main/file.md
+curl http://localhost:8080/https://api.github.com/repos/owner/repo
+curl http://localhost:8080/https://gist.github.com/user/gist-id/raw/file.txt
+```
+
+**3. Path-Based Deployment**
+
+Deploy on a subpath by setting `base_path` in config:
+
+```yaml
+server:
+  base_path: /ghproxy
+```
+
+Then access via:
+
+```bash
+# Traditional paths under base path
+curl http://example.com/ghproxy/owner/repo/raw/main/README.md
+
+# Full URLs under base path
+curl http://example.com/ghproxy/https://github.com/owner/repo/raw/main/README.md
+```
 
 #### Download Release Assets
 
@@ -656,6 +710,124 @@ Import the provided Grafana dashboard or create custom panels using metrics:
 - Error rate: `rate(github_proxy_requests_total{status=~"5.."}[5m])`
 - Cache hit rate: `rate(github_proxy_cache_hits_total[5m]) / (rate(github_proxy_cache_hits_total[5m]) + rate(github_proxy_cache_misses_total[5m]))`
 - Request duration (p95): `histogram_quantile(0.95, rate(github_proxy_request_duration_seconds_bucket[5m]))`
+
+## Usage Examples
+
+### Example 1: Basic Setup with Full URL Support
+
+```yaml
+# config.yaml
+server:
+  http_port: 8080
+  base_path: ""  # Listen on root path
+
+proxy:
+  enabled: false
+```
+
+**Usage:**
+
+```bash
+# Traditional path-based
+curl http://localhost:8080/torvalds/linux/raw/master/README
+
+# Full GitHub URL
+curl http://localhost:8080/https://github.com/torvalds/linux/raw/master/README
+
+# Raw GitHub User Content URL
+curl http://localhost:8080/https://raw.githubusercontent.com/torvalds/linux/master/README
+```
+
+### Example 2: Subpath Deployment (e.g., behind Nginx)
+
+```yaml
+# config.yaml
+server:
+  http_port: 8080
+  base_path: /ghproxy  # All routes under /ghproxy
+```
+
+**Nginx configuration:**
+
+```nginx
+location /ghproxy/ {
+    proxy_pass http://localhost:8080/ghproxy/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+```
+
+**Usage:**
+
+```bash
+# Traditional path-based with base path
+curl http://example.com/ghproxy/owner/repo/raw/main/file.md
+
+# Full GitHub URL with base path
+curl http://example.com/ghproxy/https://github.com/owner/repo/raw/main/file.md
+
+# Works with all GitHub resources
+curl http://example.com/ghproxy/https://github.com/owner/repo/releases/download/v1.0.0/app.tar.gz
+```
+
+### Example 3: With HTTP Proxy and Authentication
+
+```yaml
+# config.yaml
+server:
+  http_port: 8080
+  base_path: /ghproxy
+
+proxy:
+  enabled: true
+  type: http  # Use HTTP proxy
+  address: proxy.example.com:8080
+  username: proxy_user
+  password: proxy_pass
+
+auth:
+  enabled: true
+  type: token
+  tokens:
+    - "secret-token-123"
+```
+
+**Usage:**
+
+```bash
+# With authentication token
+curl -H "X-Auth-Token: secret-token-123" \
+  http://localhost:8080/ghproxy/https://github.com/owner/repo/raw/main/file.md
+
+# With basic auth
+curl -u username:secret-token-123 \
+  http://localhost:8080/ghproxy/owner/repo/raw/main/file.md
+```
+
+### Example 4: All Supported URL Formats
+
+```bash
+# GitHub releases
+curl http://localhost:8080/https://github.com/owner/repo/releases/download/v1.0.0/binary.tar.gz
+
+# Raw files (multiple formats)
+curl http://localhost:8080/https://github.com/owner/repo/raw/main/README.md
+curl http://localhost:8080/https://github.com/owner/repo/raw/refs/heads/main/README.md
+curl http://localhost:8080/https://github.com/owner/repo/blob/main/README.md  # Auto-converted to raw
+curl http://localhost:8080/https://raw.githubusercontent.com/owner/repo/main/README.md
+
+# Archives
+curl http://localhost:8080/https://github.com/owner/repo/archive/refs/tags/v1.0.0.tar.gz
+curl http://localhost:8080/https://github.com/owner/repo/archive/refs/heads/main.zip
+
+# Gists
+curl http://localhost:8080/https://gist.github.com/username/gist-id/raw/file.txt
+
+# API
+curl http://localhost:8080/https://api.github.com/repos/owner/repo
+curl http://localhost:8080/https://api.github.com/user/repos
+```
 
 ## Troubleshooting
 

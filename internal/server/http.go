@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -166,34 +167,88 @@ func (s *HTTPServer) setupRoutes(router *gin.Engine) {
 	gitHandler := handler.NewGitHandler(s.proxyClient, "")
 	gistHandler := handler.NewGistHandler(s.cache, s.proxyClient)
 	apiHandler := handler.NewAPIHandler(s.cache, s.proxyClient, "")
+	urlHandler := handler.NewURLHandler(s.cache, s.proxyClient)
 
+	// Determine the base path
+	basePath := s.config.Server.BasePath
+	if basePath != "" {
+		// Ensure base path starts with / but doesn't end with /
+		if !strings.HasPrefix(basePath, "/") {
+			basePath = "/" + basePath
+		}
+		basePath = strings.TrimSuffix(basePath, "/")
+	}
+
+	// Create a route group with the base path
+	var routeGroup *gin.RouterGroup
+	if basePath != "" {
+		routeGroup = router.Group(basePath)
+	} else {
+		// Use empty group for root path
+		routeGroup = router.Group("")
+	}
+
+	// Full URL handler - catches GitHub URLs like /https://github.com/owner/repo/...
+	// This should be registered first to catch full URLs before path-based routes
+	routeGroup.GET("/*url", func(c *gin.Context) {
+		path := c.Param("url")
+		// Check if this looks like a GitHub URL
+		if isGitHubURL(path) {
+			urlHandler.Handle(c)
+			return
+		}
+		// If not a GitHub URL, continue to next handler
+		c.Next()
+	})
+
+	// Traditional path-based routes
 	// Release downloads
-	router.GET("/:owner/:repo/releases/download/:tag/:filename", releasesHandler.Handle)
+	routeGroup.GET("/:owner/:repo/releases/download/:tag/:filename", releasesHandler.Handle)
 
 	// Raw content
-	router.GET("/:owner/:repo/raw/:ref/*filepath", rawHandler.Handle)
+	routeGroup.GET("/:owner/:repo/raw/:ref/*filepath", rawHandler.Handle)
 
 	// Archive downloads
-	router.GET("/:owner/:repo/archive/:ref", archiveHandler.Handle)
+	routeGroup.GET("/:owner/:repo/archive/:ref", archiveHandler.Handle)
 
 	// Git protocol routes
-	router.GET("/:owner/:repo.git/info/refs", gitHandler.HandleInfoRefs)
-	router.POST("/:owner/:repo.git/git-upload-pack", gitHandler.HandleUploadPack)
-	router.POST("/:owner/:repo.git/git-receive-pack", gitHandler.HandleReceivePack)
+	routeGroup.GET("/:owner/:repo.git/info/refs", gitHandler.HandleInfoRefs)
+	routeGroup.POST("/:owner/:repo.git/git-upload-pack", gitHandler.HandleUploadPack)
+	routeGroup.POST("/:owner/:repo.git/git-receive-pack", gitHandler.HandleReceivePack)
 
 	// Gist routes
-	router.GET("/gist/:user/:gist_id/raw/:file", gistHandler.Handle)
+	routeGroup.GET("/gist/:user/:gist_id/raw/:file", gistHandler.Handle)
 
 	// API proxy
-	router.Any("/api/*path", apiHandler.Handle)
+	routeGroup.Any("/api/*path", apiHandler.Handle)
 
-	// Health check endpoint
+	// Health check endpoint (always at root + base path)
+	if basePath != "" {
+		routeGroup.GET("/health", s.handleHealth)
+	}
 	router.GET("/health", s.handleHealth)
 
-	// Metrics endpoint (if enabled)
+	// Metrics endpoint (if enabled, always at root)
 	if s.config.Metrics.Enabled {
 		router.GET(s.config.Metrics.Path, gin.WrapH(metrics.Handler()))
 	}
+}
+
+// isGitHubURL checks if a path looks like a GitHub URL
+func isGitHubURL(path string) bool {
+	path = strings.TrimPrefix(path, "/")
+	return strings.HasPrefix(path, "http://github.com/") ||
+		strings.HasPrefix(path, "https://github.com/") ||
+		strings.HasPrefix(path, "github.com/") ||
+		strings.HasPrefix(path, "http://raw.githubusercontent.com/") ||
+		strings.HasPrefix(path, "https://raw.githubusercontent.com/") ||
+		strings.HasPrefix(path, "raw.githubusercontent.com/") ||
+		strings.HasPrefix(path, "http://api.github.com/") ||
+		strings.HasPrefix(path, "https://api.github.com/") ||
+		strings.HasPrefix(path, "api.github.com/") ||
+		strings.HasPrefix(path, "http://gist.github.com/") ||
+		strings.HasPrefix(path, "https://gist.github.com/") ||
+		strings.HasPrefix(path, "gist.github.com/")
 }
 
 // handleHealth handles health check requests.

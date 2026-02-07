@@ -8,6 +8,7 @@ server:
   enable_https: false
   # tls_cert_file: /path/to/cert.pem
   # tls_key_file: /path/to/key.pem
+  base_path: ""  # Base path for all routes (e.g., "/ghproxy" for xxxx.com/ghproxy/...)
   read_timeout: 30s
   write_timeout: 300s
   idle_timeout: 120s

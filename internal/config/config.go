@@ -26,6 +26,7 @@ type ServerConfig struct {
 	EnableHTTPS      bool          `mapstructure:"enable_https"`
 	TLSCertFile      string        `mapstructure:"tls_cert_file"`
 	TLSKeyFile       string        `mapstructure:"tls_key_file"`
+	BasePath         string        `mapstructure:"base_path"` // Base path for all routes (e.g., "/ghproxy")
 	ReadTimeout      time.Duration `mapstructure:"read_timeout"`
 	WriteTimeout     time.Duration `mapstructure:"write_timeout"`
 	IdleTimeout      time.Duration `mapstructure:"idle_timeout"`
@@ -167,6 +168,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("server.http_port", 8080)
 	v.SetDefault("server.https_port", 8443)
 	v.SetDefault("server.enable_https", false)
+	v.SetDefault("server.base_path", "") // Default to root path
 	v.SetDefault("server.read_timeout", 30*time.Second)
 	v.SetDefault("server.write_timeout", 30*time.Second)
 	v.SetDefault("server.idle_timeout", 120*time.Second)
