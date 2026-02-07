@@ -152,10 +152,35 @@ func (s *HTTPServer) setupRouter() {
 		router.Use(middleware.Auth(&s.config.Auth, s.authCache, s.logger))
 	}
 
+	// Full URL handler middleware - must be before routing
+	// Handles paths containing :// (full URLs with schemes)
+	router.Use(s.fullURLMiddleware())
+
 	// Setup routes
 	s.setupRoutes(router)
 
 	s.router = router
+}
+
+// fullURLMiddleware handles requests with full GitHub URLs (containing ://)
+// This must run before routing to avoid conflicts with :owner/:repo routes
+func (s *HTTPServer) fullURLMiddleware() gin.HandlerFunc {
+	urlHandler := handler.NewURLHandler(s.cache, s.proxyClient)
+
+	return func(c *gin.Context) {
+		path := c.Request.URL.Path
+
+		// Check if this is a full URL with scheme (contains ://)
+		if strings.Contains(path, "://") {
+			// This is a full URL, handle it directly
+			urlHandler.Handle(c)
+			c.Abort() // Don't continue to routing
+			return
+		}
+
+		// Not a full URL, continue to normal routing
+		c.Next()
+	}
 }
 
 // setupRoutes defines all HTTP routes.
@@ -211,26 +236,11 @@ func (s *HTTPServer) setupRoutes(router *gin.Engine) {
 
 	// Full URL handler - specific patterns for GitHub URLs without schemes
 	// These catch URLs like /github.com/... (without https://)
+	// Note: URLs with schemes (https://, http://) are handled by fullURLMiddleware
 	routeGroup.GET("/github.com/*url", urlHandler.Handle)
 	routeGroup.GET("/raw.githubusercontent.com/*url", urlHandler.Handle)
 	routeGroup.GET("/api.github.com/*url", urlHandler.Handle)
 	routeGroup.GET("/gist.github.com/*url", urlHandler.Handle)
-
-	// Catch-all route for full URLs with schemes (https://, http://)
-	// This must be registered LAST to allow specific routes to match first
-	// Handles paths like /https://github.com/... or /http://github.com/...
-	routeGroup.GET("/*catchall", func(c *gin.Context) {
-		path := c.Request.URL.Path
-		// Check if this looks like a full URL with scheme
-		if strings.Contains(path, "://") ||
-		   strings.Contains(path, "/https/") ||
-		   strings.Contains(path, "/http/") {
-			urlHandler.Handle(c)
-			return
-		}
-		// Not a recognized pattern, return 404
-		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
-	})
 
 	// Health check endpoint (always at root + base path)
 	if basePath != "" {
