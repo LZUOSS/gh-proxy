@@ -22,7 +22,7 @@ GOVET=$(GOCMD) vet
 LDFLAGS=-ldflags "-s -w"
 BUILD_FLAGS=-trimpath
 
-.PHONY: all build test clean run install lint docker-build docker-run help
+.PHONY: all build test clean run install lint docker-build docker-run help build-all-platforms github-release
 
 # Default target
 all: test build
@@ -119,7 +119,7 @@ docker-stop:
 	docker rm $(BINARY_NAME)
 	@echo "Docker container stopped"
 
-# Build for multiple platforms
+# Build for multiple platforms (simple version)
 build-all:
 	@echo "Building for multiple platforms..."
 	@mkdir -p $(BUILD_DIR)
@@ -130,7 +130,13 @@ build-all:
 	GOOS=windows GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-windows-amd64.exe $(MAIN_PATH)
 	@echo "Multi-platform build complete"
 
-# Create release packages
+# Build for all platforms with archives (uses script)
+build-all-platforms:
+	@echo "Building for all platforms with archives..."
+	@./scripts/build-all.sh
+	@echo "Build complete"
+
+# Create release packages (simple version)
 release: build-all
 	@echo "Creating release packages..."
 	@cd $(BUILD_DIR) && \
@@ -140,6 +146,17 @@ release: build-all
 		tar -czf $(BINARY_NAME)-darwin-arm64.tar.gz $(BINARY_NAME)-darwin-arm64 && \
 		zip $(BINARY_NAME)-windows-amd64.zip $(BINARY_NAME)-windows-amd64.exe
 	@echo "Release packages created in $(BUILD_DIR)"
+
+# Create GitHub release with all binaries
+github-release:
+	@echo "Creating GitHub release..."
+	@if ! command -v gh >/dev/null 2>&1; then \
+		echo "Error: GitHub CLI (gh) is not installed"; \
+		echo "Install from: https://cli.github.com/"; \
+		exit 1; \
+	fi
+	@./scripts/release.sh $(VERSION)
+	@echo "GitHub release created"
 
 # Install the binary to system
 install-binary: build
@@ -151,21 +168,39 @@ install-binary: build
 help:
 	@echo "GitHub Reverse Proxy - Makefile targets:"
 	@echo ""
-	@echo "  make build          - Build the application"
-	@echo "  make test           - Run tests"
-	@echo "  make test-coverage  - Run tests with coverage report"
-	@echo "  make run            - Run the application"
-	@echo "  make clean          - Clean build artifacts"
-	@echo "  make install        - Install dependencies"
-	@echo "  make update         - Update dependencies"
-	@echo "  make lint           - Run linters"
-	@echo "  make fmt            - Format code"
-	@echo "  make vet            - Run go vet"
-	@echo "  make docker-build   - Build Docker image"
-	@echo "  make docker-run     - Run Docker container"
-	@echo "  make docker-stop    - Stop Docker container"
-	@echo "  make build-all      - Build for multiple platforms"
-	@echo "  make release        - Create release packages"
-	@echo "  make install-binary - Install binary to system"
-	@echo "  make help           - Display this help message"
+	@echo "Build targets:"
+	@echo "  make build               - Build the application"
+	@echo "  make build-all           - Build for multiple platforms (simple)"
+	@echo "  make build-all-platforms - Build for all platforms with archives"
+	@echo "  make release             - Create release packages (simple)"
+	@echo "  make github-release      - Create GitHub release (requires gh CLI)"
+	@echo ""
+	@echo "Development targets:"
+	@echo "  make test                - Run tests"
+	@echo "  make test-coverage       - Run tests with coverage report"
+	@echo "  make run                 - Run the application"
+	@echo "  make clean               - Clean build artifacts"
+	@echo "  make install             - Install dependencies"
+	@echo "  make update              - Update dependencies"
+	@echo ""
+	@echo "Code quality targets:"
+	@echo "  make lint                - Run linters"
+	@echo "  make fmt                 - Format code"
+	@echo "  make vet                 - Run go vet"
+	@echo ""
+	@echo "Docker targets:"
+	@echo "  make docker-build        - Build Docker image"
+	@echo "  make docker-run          - Run Docker container"
+	@echo "  make docker-stop         - Stop Docker container"
+	@echo ""
+	@echo "Installation targets:"
+	@echo "  make install-binary      - Install binary to system"
+	@echo ""
+	@echo "Other targets:"
+	@echo "  make help                - Display this help message"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make build                          # Build for current platform"
+	@echo "  make build-all-platforms            # Build for all platforms"
+	@echo "  make github-release VERSION=v1.0.0  # Create GitHub release"
 	@echo ""
