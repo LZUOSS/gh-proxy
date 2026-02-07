@@ -44,6 +44,12 @@ func TestParseGitHubURL(t *testing.T) {
 			wantErr:  false,
 		},
 		{
+			name:     "GitHub archive URL with refs/tags (golang example)",
+			url:      "https://github.com/golang/go/archive/refs/tags/go1.26rc3.tar.gz",
+			wantType: "archive",
+			wantErr:  false,
+		},
+		{
 			name:     "GitHub API URL",
 			url:      "https://api.github.com/repos/owner/repo",
 			wantType: "api",

@@ -211,8 +211,8 @@ func (s *HTTPServer) setupRoutes(router *gin.Engine) {
 
 	// Full URL handler - specific patterns for GitHub URLs
 	// These catch URLs like /https://github.com/... or /github.com/...
-	routeGroup.GET("/https/*url", urlHandler.Handle)
-	routeGroup.GET("/http/*url", urlHandler.Handle)
+	routeGroup.GET("/https:/*url", urlHandler.Handle)
+	routeGroup.GET("/http:/*url", urlHandler.Handle)
 	routeGroup.GET("/github.com/*url", urlHandler.Handle)
 	routeGroup.GET("/raw.githubusercontent.com/*url", urlHandler.Handle)
 	routeGroup.GET("/api.github.com/*url", urlHandler.Handle)
