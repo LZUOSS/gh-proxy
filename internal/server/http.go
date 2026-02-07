@@ -209,14 +209,28 @@ func (s *HTTPServer) setupRoutes(router *gin.Engine) {
 	// API proxy
 	routeGroup.Any("/api/*path", apiHandler.Handle)
 
-	// Full URL handler - specific patterns for GitHub URLs
-	// These catch URLs like /https://github.com/... or /github.com/...
-	routeGroup.GET("/https:/*url", urlHandler.Handle)
-	routeGroup.GET("/http:/*url", urlHandler.Handle)
+	// Full URL handler - specific patterns for GitHub URLs without schemes
+	// These catch URLs like /github.com/... (without https://)
 	routeGroup.GET("/github.com/*url", urlHandler.Handle)
 	routeGroup.GET("/raw.githubusercontent.com/*url", urlHandler.Handle)
 	routeGroup.GET("/api.github.com/*url", urlHandler.Handle)
 	routeGroup.GET("/gist.github.com/*url", urlHandler.Handle)
+
+	// Catch-all route for full URLs with schemes (https://, http://)
+	// This must be registered LAST to allow specific routes to match first
+	// Handles paths like /https://github.com/... or /http://github.com/...
+	routeGroup.GET("/*catchall", func(c *gin.Context) {
+		path := c.Request.URL.Path
+		// Check if this looks like a full URL with scheme
+		if strings.Contains(path, "://") ||
+		   strings.Contains(path, "/https/") ||
+		   strings.Contains(path, "/http/") {
+			urlHandler.Handle(c)
+			return
+		}
+		// Not a recognized pattern, return 404
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+	})
 
 	// Health check endpoint (always at root + base path)
 	if basePath != "" {
